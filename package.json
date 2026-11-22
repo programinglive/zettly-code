@@ -1,6 +1,6 @@
 {
   "name": "@programinglive/zettly-code",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": false,
   "description": "Zettly Code — Open-Source Persistent Source-Code Memory & Self-Evolving Zettelkasten Knowledge Graph for Zettly and DevWorkflow",
   "homepage": "https://zettly.programinglive.com",
