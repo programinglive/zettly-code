@@ -1,0 +1,27 @@
+{
+  "name": "@programinglive/zettly-code",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Zettly Code — Persistent Source-Code Memory & Self-Evolving Zettelkasten Knowledge Graph",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./devworkflow": "./src/integrations/devworkflow/adapter.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "test": "node --test tests/acceptance/*.test.js",
+    "test:bench": "node tests/benchmarks/debugging-benchmark.mjs"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.11.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/programinglive/zettly-code.git"
+  },
+  "license": "UNLICENSED"
+}

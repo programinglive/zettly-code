@@ -1,0 +1,11 @@
+node_modules/
+.zettly-code/
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.*
+!.env.example
+dist/
+coverage/
+*.log
