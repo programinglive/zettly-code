@@ -1,14 +1,21 @@
 {
   "name": "@programinglive/zettly-code",
   "version": "1.0.0",
-  "private": true,
-  "description": "Zettly Code — Persistent Source-Code Memory & Self-Evolving Zettelkasten Knowledge Graph",
+  "private": false,
+  "description": "Zettly Code — Open-Source Persistent Source-Code Memory & Self-Evolving Zettelkasten Knowledge Graph for Zettly and DevWorkflow",
+  "homepage": "https://zettly.programinglive.com",
   "type": "module",
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
     "./devworkflow": "./src/integrations/devworkflow/adapter.js"
   },
+  "files": [
+    "src",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=20.0.0"
   },
@@ -16,12 +23,28 @@
     "test": "node --test tests/acceptance/*.test.js",
     "test:bench": "node tests/benchmarks/debugging-benchmark.mjs"
   },
+  "keywords": [
+    "zettly",
+    "zettelkasten",
+    "knowledge-graph",
+    "code-intelligence",
+    "dev-workflow",
+    "mcp",
+    "sqlite",
+    "debugging-memory"
+  ],
   "dependencies": {
     "better-sqlite3": "^12.11.1"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/programinglive/zettly-code.git"
+    "url": "git+https://github.com/programinglive/zettly-code.git"
   },
-  "license": "UNLICENSED"
+  "bugs": {
+    "url": "https://github.com/programinglive/zettly-code/issues"
+  },
+  "license": "MIT"
 }

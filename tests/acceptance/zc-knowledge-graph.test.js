@@ -358,7 +358,17 @@ test("ZC-20: historical bug-fix record transitions to SUPERSEDED when affected f
   }
 });
 
-test("ZC-21: programinglive/zettly-code GitHub repository privacy verification (PRIVATE)", () => {
+test("ZC-21: programinglive/zettly-code open-source repository & MIT license verification (PUBLIC)", () => {
+  const pkgPath = path.resolve(process.cwd(), "package.json");
+  const licensePath = path.resolve(process.cwd(), "LICENSE");
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+  assert.equal(pkg.name, "@programinglive/zettly-code");
+  assert.equal(pkg.private, false);
+  assert.equal(pkg.license, "MIT");
+  assert.equal(pkg.publishConfig?.access, "public");
+  assert.equal(fs.existsSync(licensePath), true);
+  assert.match(fs.readFileSync(licensePath, "utf8"), /MIT License/);
+
   const out = execFileSync(
     "gh",
     ["repo", "view", "programinglive/zettly-code", "--json", "name,visibility,isPrivate"],
@@ -366,8 +376,8 @@ test("ZC-21: programinglive/zettly-code GitHub repository privacy verification (
   );
   const parsed = JSON.parse(out);
   assert.equal(parsed.name, "zettly-code");
-  assert.equal(parsed.isPrivate, true);
-  assert.equal(parsed.visibility, "PRIVATE");
+  assert.equal(parsed.isPrivate, false);
+  assert.equal(parsed.visibility, "PUBLIC");
 });
 
 test("ZC-22: code_context auto-updates stale graph before returning fresh debugging context", () => {
