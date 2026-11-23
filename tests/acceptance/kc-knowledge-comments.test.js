@@ -329,18 +329,35 @@ export function run() { return 2; }\n`
   }
 });
 
-test("KC-16: non-bugfix tasks do not trigger mandatory bug-fix knowledge comment failure", () => {
+test("KC-16: non-bugfix FEATURE tasks require @zettly-code + @purpose knowledge annotations", () => {
   const tmp = makeTempRepo("zc-kc16-");
   try {
     fs.mkdirSync(path.join(tmp, "src"), { recursive: true });
     fs.writeFileSync(path.join(tmp, "src", "feature.js"), `export function greet() { return "hi"; }\n`);
-    const gate = evaluateBugFixKnowledgeGate({
+    indexRepository(tmp, { mode: "initialize" });
+
+    const blocked = evaluateBugFixKnowledgeGate({
       projectDir: tmp,
       changedFiles: ["src/feature.js"],
       taskType: "FEATURE",
     });
-    assert.equal(gate.ok, true);
-    assert.equal(gate.status, "NOT_APPLICABLE");
+    assert.equal(blocked.ok, false);
+    assert.equal(blocked.status, "BLOCKED");
+    assert.ok(blocked.findings.some((f) => f.code === "MISSING_CODE_KNOWLEDGE_COMMENT"));
+
+    fs.writeFileSync(
+      path.join(tmp, "src", "feature.js"),
+      `/**\n * @zettly-code ZC-GREET-001\n * @purpose Return greeting string for clinic welcome banner\n */\nexport function greet() { return "hi"; }\n`
+    );
+    indexRepository(tmp, { mode: "update" });
+
+    const passed = evaluateBugFixKnowledgeGate({
+      projectDir: tmp,
+      changedFiles: ["src/feature.js"],
+      taskType: "FEATURE",
+    });
+    assert.equal(passed.ok, true);
+    assert.equal(passed.status, "PASSED");
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }

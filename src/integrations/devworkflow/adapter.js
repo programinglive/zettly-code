@@ -48,14 +48,10 @@ export function handleCodeContext(args = {}) {
 }
 
 /**
- * Mandatory Bug-Fix Knowledge Quality Gate (`bugfix_knowledge_gate`).
- *
- * Enforces that every verified BUG_FIX task leaves behind:
- *   1. Valid `@zettly-code` inline comments (or sidecar records for generated/non-commentable files)
- *      on the affected production source files with `@purpose`, `@bug-fix`, `@root-cause` or `@hypothesis`, and `@fix`.
- *   2. Zero secret/PII leakage, zero duplicate knowledge IDs, zero syntax errors.
- *   3. Fresh Zettly Code knowledge graph updated after the fix.
- *   4. Optional persistence of the structured `bug_fix_records` entry and compact Zettly sync reference.
+ * @zettly-code ZC-ZETTLY-CODE-GATE-001
+ * @purpose Universal Code Knowledge Quality Gate enforcing @zettly-code annotations across ALL task types (bugfix, feature, refactor, other).
+ * @invariant Every task modifying or creating production source files must leave behind valid @zettly-code annotations (@purpose for all tasks, plus @bug-fix, @root-cause/@hypothesis, and @fix for bugfixes) and a fresh SQLite knowledge graph.
+ * @tests zettly-code-and-release-governance-v310.test.js
  */
 export function evaluateBugFixKnowledgeGate({
   projectDir,
@@ -73,7 +69,7 @@ export function evaluateBugFixKnowledgeGate({
   dbPath = null,
 }) {
   const resolvedRoot = fs.realpathSync(path.resolve(projectDir));
-  const normalizedType = String(taskType || "BUG_FIX").toUpperCase();
+  const normalizedType = String(taskType || "FEATURE").toUpperCase();
   const isBugFixTask =
     normalizedType === "BUG_FIX" ||
     normalizedType === "BUGFIX" ||
@@ -92,21 +88,10 @@ export function evaluateBugFixKnowledgeGate({
     return true;
   });
 
-  if (!isBugFixTask) {
-    return {
-      ok: true,
-      gate: "bugfix_knowledge_gate",
-      status: "NOT_APPLICABLE",
-      reason: `Task type '${taskType}' is not a bug-fix workflow; mandatory bug-fix knowledge comment gate skipped.`,
-      checkedFiles: prodSourceFiles,
-      findings: [],
-    };
-  }
-
   if (prodSourceFiles.length === 0) {
     return {
       ok: true,
-      gate: "bugfix_knowledge_gate",
+      gate: isBugFixTask ? "bugfix_knowledge_gate" : "code_knowledge_gate",
       status: "SKIPPED_NO_PRODUCTION_SOURCE_CHANGES",
       reason: "Changed files contain only tests or documentation; no production source code modified.",
       checkedFiles: [],
@@ -155,27 +140,33 @@ export function evaluateBugFixKnowledgeGate({
 
     allAnnotations.push(...fileAnnotations);
 
-    const hasBugFixAnnotation = fileAnnotations.some(
-      (a) =>
-        a.id &&
-        a.purpose &&
-        a.bugFixes &&
-        a.bugFixes.length > 0 &&
-        (a.rootCause || a.hypothesis) &&
-        a.fix
-    );
+    const hasRequiredAnnotation = isBugFixTask
+      ? fileAnnotations.some(
+          (a) =>
+            a.id &&
+            a.purpose &&
+            a.bugFixes &&
+            a.bugFixes.length > 0 &&
+            (a.rootCause || a.hypothesis) &&
+            a.fix
+        )
+      : fileAnnotations.some((a) => Boolean(a.id && a.purpose));
 
-    if (hasBugFixAnnotation) {
+    if (hasRequiredAnnotation) {
       coveredFiles.push(relPath);
     } else {
       uncoveredFiles.push(relPath);
       findings.push({
-        code: "MISSING_BUGFIX_KNOWLEDGE_COMMENT",
+        code: isBugFixTask ? "MISSING_BUGFIX_KNOWLEDGE_COMMENT" : "MISSING_CODE_KNOWLEDGE_COMMENT",
         severity: "error",
         file: relPath,
-        message: NON_COMMENTABLE_EXTENSIONS.has(ext)
-          ? `Modified non-commentable file '${relPath}' lacks a sidecar @zettly-code bug-fix knowledge record in engineering/zettly-code-sidecars/*.json.`
-          : `Modified source file '${relPath}' lacks a valid @zettly-code bug-fix comment with @purpose, @bug-fix, @root-cause/@hypothesis, and @fix.`,
+        message: isBugFixTask
+          ? NON_COMMENTABLE_EXTENSIONS.has(ext)
+            ? `Modified non-commentable file '${relPath}' lacks a sidecar @zettly-code bug-fix knowledge record in engineering/zettly-code-sidecars/*.json.`
+            : `Modified source file '${relPath}' lacks a valid @zettly-code bug-fix comment with @purpose, @bug-fix, @root-cause/@hypothesis, and @fix.`
+          : NON_COMMENTABLE_EXTENSIONS.has(ext)
+            ? `Modified non-commentable file '${relPath}' lacks a sidecar @zettly-code knowledge record in engineering/zettly-code-sidecars/*.json.`
+            : `Modified source file '${relPath}' lacks a valid @zettly-code comment with @zettly-code <ID> and @purpose.`,
       });
     }
   }
